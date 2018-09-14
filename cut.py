@@ -100,7 +100,28 @@ class BaseCutter(Player):
         self.stop = None
 
 
-class VidCutter(BaseCutter):
+class ScriptMixin(object):
+    def append_command(self, command):
+        scriptfile = os.path.join(self.outdir, "onescripttocutthemall.sh")
+        with open(scriptfile, "a") as f:
+            f.write(command + "\n")
+
+
+class VidCutter(BaseCutter, ScriptMixin):
+    def __init__(self, outdir = "output", generate_script = False):
+        super().__init__(outdir)
+        self.generate_script = generate_script
+
+    def print_help(self):
+        super().print_help()
+        if self.generate_script:
+            print("Press 's' once to set starting point, then again 's' to")
+            print("set end point and produce the cutting script which produces")
+            print("videos.")
+        else:
+            print("Press 's' once to set starting point, then again 's' to")
+            print("set end point and produce the cut video.")
+
     def get_outfile(self):
         outname = self.basename + "_{:03}".format(self.n_cuts) + self.baseext
         return os.path.join(self.outdir, outname)
@@ -119,10 +140,27 @@ class VidCutter(BaseCutter):
                 start_time = start_time, duration = duration,
                 infile = infile, outfile = outfile)
         print(command)
-        subprocess.call(command, shell = True)
+        if self.generate_script:
+            self.append_command(command)
+        else:
+            subprocess.call(command, shell = True)
 
 
-class ImgCutter(BaseCutter):
+class ImgCutter(BaseCutter, ScriptMixin):
+    def __init__(self, outdir = "output", generate_script = False):
+        super().__init__(outdir)
+        self.generate_script = generate_script
+
+    def print_help(self):
+        super().print_help()
+        if self.generate_script:
+            print("Press 's' once to set starting point, then again 's' to")
+            print("set end point and produce the cutting script which produces")
+            print("images.")
+        else:
+            print("Press 's' once to set starting point, then again 's' to")
+            print("set end point and produce the cut images.")
+
     def get_outfile(self):
         outname = self.basename + "_{:03}".format(self.n_cuts) + "_%06d.png"
         return os.path.join(self.outdir, outname)
@@ -141,14 +179,30 @@ class ImgCutter(BaseCutter):
                 start_time = start_time, duration = duration,
                 infile = infile, outpattern = outpattern)
         print(command)
-        subprocess.call(command, shell = True)
+        if self.generate_script:
+            self.append_command(command)
+        else:
+            subprocess.call(command, shell = True)
 
 
 
 if __name__ == "__main__":
-    path = sys.argv[1]
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-m", "--mode",
+            metavar = "mode", choices = ["vids", "imgs"], default = "vids", help="produce images or videos")
+    parser.add_argument("-s", "--script",
+            action = "store_true", help = "produce script instead of cutting immediately")
+    parser.add_argument("path",
+            metavar = "video", help = "path to video to cut")
+    opt = parser.parse_args()
 
-    cut = ImgCutter()
+    path = opt.path
+
+    if opt.mode == "imgs":
+        cut = ImgCutter(generate_script = opt.script)
+    elif opt.mode == "vids":
+        cut = VidCutter(generate_script = opt.script)
     cut.print_help()
     cut.open(path)
     cut.run()
