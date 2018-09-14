@@ -136,7 +136,7 @@ class VidCutter(BaseCutter, ScriptMixin):
 
         infile = self.path
         outfile = self.get_outfile()
-        command = "ffmpeg -ss {start_time} -i {infile} -t {duration} -c copy {outfile}".format(
+        command = "ffmpeg -ss {start_time} -i '{infile}' -t {duration} '{outfile}'".format(
                 start_time = start_time, duration = duration,
                 infile = infile, outfile = outfile)
         print(command)
@@ -175,7 +175,7 @@ class ImgCutter(BaseCutter, ScriptMixin):
 
         infile = self.path
         outpattern = self.get_outfile()
-        command = "ffmpeg -ss {start_time} -i {infile} -t {duration} {outpattern}".format(
+        command = "ffmpeg -ss {start_time} -i '{infile}' -t {duration} '{outpattern}'".format(
                 start_time = start_time, duration = duration,
                 infile = infile, outpattern = outpattern)
         print(command)
