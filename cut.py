@@ -62,6 +62,7 @@ class Player(object):
             self.dispatch(key)
             if key == 'q':
                 break
+        cv2.destroyAllWindows()
 
 class BaseCutter(Player):
     def __init__(self, outdir = "output"):
@@ -136,7 +137,7 @@ class VidCutter(BaseCutter, ScriptMixin):
 
         infile = self.path
         outfile = self.get_outfile()
-        command = "ffmpeg -ss {start_time} -i '{infile}' -t {duration} '{outfile}'".format(
+        command = "ffmpeg -ss {start_time} -i '{infile}' -t {duration} -qscale:v 0 '{outfile}'".format(
                 start_time = start_time, duration = duration,
                 infile = infile, outfile = outfile)
         print(command)
@@ -194,15 +195,17 @@ if __name__ == "__main__":
     parser.add_argument("-s", "--script",
             action = "store_true", help = "produce script instead of cutting immediately")
     parser.add_argument("path",
-            metavar = "video", help = "path to video to cut")
+            metavar = "video", help = "path to video(s) to cut",
+            nargs = "+")
     opt = parser.parse_args()
 
     path = opt.path
 
-    if opt.mode == "imgs":
-        cut = ImgCutter(generate_script = opt.script)
-    elif opt.mode == "vids":
-        cut = VidCutter(generate_script = opt.script)
-    cut.print_help()
-    cut.open(path)
-    cut.run()
+    for vid in path:
+        if opt.mode == "imgs":
+            cut = ImgCutter(generate_script = opt.script)
+        elif opt.mode == "vids":
+            cut = VidCutter(generate_script = opt.script)
+        cut.print_help()
+        cut.open(vid)
+        cut.run()
